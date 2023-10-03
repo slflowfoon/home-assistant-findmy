@@ -159,8 +159,7 @@ def send_data_items(force_sync):
 
         client.publish(device_topic + "config", json.dumps(device_config))
         client.publish(device_topic + "attributes", json.dumps(device_attributes))
-        if not is_manual_known_locations:
-            client.publish(device_topic + "state", PAYLOAD_RESET)
+        client.publish(device_topic + "state", location_name if is_manual_known_locations else PAYLOAD_RESET)
 
 
 def send_data_devices(force_sync):
