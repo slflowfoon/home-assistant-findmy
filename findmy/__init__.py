@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-# .                                       .           .                   .          
-# |                                 o     |           |        ,- o       |          
+# .                                       .           .                   .
+# |                                 o     |           |        ,- o       |
 # |-. ,-. ;-.-. ,-. --- ,-: ,-. ,-. . ,-. |-  ,-: ;-. |-  ---  |  . ;-. ,-| ;-.-. . .
 # | | | | | | | |-'     | | `-. `-. | `-. |   | | | | |        |- | | | | | | | | | |
 # ' ' `-' ' ' ' `-'     `-` `-' `-' ' `-' `-' `-` ' ' `-'      |  ' ' ' `-' ' ' ' `-|
@@ -42,6 +42,7 @@ from rich.table import Table
 load_dotenv()
 
 DEFAULT_TOLERANCE = 70  # meters
+PAYLOAD_RESET = 'reset'
 
 (mqtt_broker_ip,
  mqtt_broker_port,
@@ -104,6 +105,7 @@ def get_location_name(pos):
 
 
 def send_data_items(force_sync):
+    is_manual_known_locations = bool(len(known_locations))
     for device in load_data(cache_file_location_items):
         device_name = device['name']
         battery_status = device['batteryStatus']
@@ -137,9 +139,13 @@ def send_data_items(force_sync):
                 "name": device_name
             },
             "source_type": source_type,
-            "payload_home": "home",
-            "payload_not_home": "not_home"
         }
+        if is_manual_known_locations:
+            device_config["payload_home"] = "home"
+            device_config["payload_not_home"] = "not_home"
+        else:
+            device_config["payload_reset"] = "PAYLOAD_RESET"
+
         device_attributes = {
             "latitude": latitude,
             "longitude": longitude,
@@ -153,7 +159,8 @@ def send_data_items(force_sync):
 
         client.publish(device_topic + "config", json.dumps(device_config))
         client.publish(device_topic + "attributes", json.dumps(device_attributes))
-        client.publish(device_topic + "state", location_name)
+        if not is_manual_known_locations:
+            client.publish(device_topic + "state", PAYLOAD_RESET)
 
 
 def send_data_devices(force_sync):
@@ -238,7 +245,7 @@ def scan_cache(privacy, force_sync):
 
 def validate_param_locations(_, __, path):
     if path is None:
-        raise click.BadParameter('Please provide a valid path to the known locations config file.')
+        return path, {}
 
     if not os.path.isfile(path):
         raise click.BadParameter('The provided path is not a file.')
@@ -273,11 +280,10 @@ def set_known_locations(locations):
     known_locations = _known_locations
 
 
-@click.command("home-assistant-findmy", no_args_is_help=True)
+@click.command("home-assistant-findmy", no_args_is_help=False)
 @click.option('--locations', '-l',
               type=click.Path(),
               callback=validate_param_locations,
-              required=True,
               help='Path to the known locations JSON configuration file')
 @click.option('--privacy', '-p',
               is_flag=True,
