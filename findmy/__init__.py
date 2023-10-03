@@ -144,7 +144,7 @@ def send_data_items(force_sync):
             device_config["payload_home"] = "home"
             device_config["payload_not_home"] = "not_home"
         else:
-            device_config["payload_reset"] = "PAYLOAD_RESET"
+            device_config["payload_reset"] = PAYLOAD_RESET
 
         device_attributes = {
             "latitude": latitude,
