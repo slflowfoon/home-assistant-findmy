@@ -84,7 +84,7 @@ def load_data(data_file):
 
 
 def get_device_id(name):
-    return unidecode(re.sub(r'[\s-]', '_', name).lower())
+    return re.sub('[^0-9a-zA-Z_]+', '', unidecode(re.sub(r'[\s-]', '_', name).lower()))
 
 
 def get_source_type(apple_position_type):
@@ -125,9 +125,9 @@ def send_mqtt_data(force_sync, device):
     if not force_sync and device_update and len(device_update) > 0 and device_update[0] == last_update:
         return
 
-    device_updates[device_name] = (last_update, location_name)
-
     device_id = get_device_id(device_name)
+    device_updates[device_name] = (last_update, location_name, device_id)
+
     device_topic = f"homeassistant/device_tracker/{device_id}/"
 
     device_config = {
@@ -188,10 +188,12 @@ def scan_cache(privacy, force_sync):
             if not privacy:
                 device_table = Table()
                 device_table.add_column("Device")
+                device_table.add_column("Device ID")
                 device_table.add_column("Last Update")
                 device_table.add_column("Location")
                 for device, details in sorted(device_updates.items(), key=lambda x: get_time(x[1][0])):
-                    device_table.add_row(device, get_time(details[0]), details[1])
+                    location = details[1] if (is_manual_known_locations or details[1] == 'unknown') else 'HA Zone based'
+                    device_table.add_row(device, details[2], get_time(details[0]), location)
                 console.print(device_table)
 
             status.update(
