@@ -48,7 +48,8 @@ PAYLOAD_RESET = 'reset'
  mqtt_broker_port,
  mqtt_client_username,
  mqtt_client_password,
- findmy_file_scan_interval) = (None,) * 5
+ findmy_file_scan_interval,
+ is_manual_known_locations) = (None,) * 6
 
 cache_file_location = os.path.expanduser('~') + '/Library/Caches/com.apple.findmy.fmipcore/'
 cache_file_location_items = cache_file_location + 'Items.data'
@@ -104,117 +105,74 @@ def get_location_name(pos):
     return "not_home"
 
 
+def send_mqtt_data(force_sync, device):
+    device_name = device['name']
+    battery_status = device['batteryStatus']
+    battery_level = device.get('batteryLevel')
+    source_type = get_source_type(device.get('location').get('positionType') if device.get('location') else None)
+
+    location_name = address = latitude = longitude = accuracy = last_update = "unknown"
+    if device['location'] is not None:
+        latitude = device['location']['latitude']
+        longitude = device['location']['longitude']
+        address = device['address']
+        accuracy = math.sqrt(
+            device['location']['horizontalAccuracy'] ** 2 + device['location']['verticalAccuracy'] ** 2)
+        location_name = get_location_name((latitude, longitude))
+        last_update = device['location']['timeStamp']
+
+    device_update = device_updates.get(device_name)
+    if not force_sync and device_update and len(device_update) > 0 and device_update[0] == last_update:
+        return
+
+    device_updates[device_name] = (last_update, location_name)
+
+    device_id = get_device_id(device_name)
+    device_topic = f"homeassistant/device_tracker/{device_id}/"
+
+    device_config = {
+        "unique_id": device_id,
+        "state_topic": device_topic + "state",
+        "json_attributes_topic": device_topic + "attributes",
+        "device": {
+            "identifiers": device_id,
+            "manufacturer": "Apple",
+            "name": device_name
+        },
+        "source_type": source_type,
+    }
+    if is_manual_known_locations:
+        device_config["payload_home"] = "home"
+        device_config["payload_not_home"] = "not_home"
+    else:
+        device_config["payload_reset"] = PAYLOAD_RESET
+
+    device_attributes = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "gps_accuracy": accuracy,
+        "address": address,
+        "batteryStatus": battery_status,
+        "last_update_timestamp": last_update,
+        "last_update": get_time(last_update),
+        "provider": "FindMy (muehlt/home-assistant-findmy)"
+    }
+    if battery_level:
+        device_attributes["battery_level"] = battery_level
+
+    client.publish(device_topic + "config", json.dumps(device_config))
+    client.publish(device_topic + "attributes", json.dumps(device_attributes))
+    client.publish(device_topic + "state", location_name if is_manual_known_locations else PAYLOAD_RESET)
+
+
 def send_data_items(force_sync):
-    is_manual_known_locations = bool(len(known_locations))
     for device in load_data(cache_file_location_items):
-        device_name = device['name']
-        battery_status = device['batteryStatus']
-        source_type = get_source_type(device.get('location').get('positionType') if device.get('location') else None)
-
-        location_name = address = latitude = longitude = accuracy = lastUpdate = "unknown"
-        if device['location'] is not None:
-            latitude = device['location']['latitude']
-            longitude = device['location']['longitude']
-            address = device['address']
-            accuracy = math.sqrt(
-                device['location']['horizontalAccuracy'] ** 2 + device['location']['verticalAccuracy'] ** 2)
-            location_name = get_location_name((latitude, longitude))
-            lastUpdate = device['location']['timeStamp']
-
-        device_update = device_updates.get(device_name)
-        if not force_sync and device_update and len(device_update) > 0 and device_update[0] == lastUpdate:
-            continue
-
-        device_updates[device_name] = (lastUpdate, location_name)
-
-        device_id = get_device_id(device_name)
-        device_topic = f"homeassistant/device_tracker/{device_id}/"
-        device_config = {
-            "unique_id": device_id,
-            "state_topic": device_topic + "state",
-            "json_attributes_topic": device_topic + "attributes",
-            "device": {
-                "identifiers": device_id,
-                "manufacturer": "Apple",
-                "name": device_name
-            },
-            "source_type": source_type,
-        }
-        if is_manual_known_locations:
-            device_config["payload_home"] = "home"
-            device_config["payload_not_home"] = "not_home"
-        else:
-            device_config["payload_reset"] = PAYLOAD_RESET
-
-        device_attributes = {
-            "latitude": latitude,
-            "longitude": longitude,
-            "gps_accuracy": accuracy,
-            "address": address,
-            "batteryStatus": battery_status,
-            "last_update_timestamp": lastUpdate,
-            "last_update": get_time(lastUpdate),
-            "provider": "FindMy (muehlt/home-assistant-findmy)"
-        }
-
-        client.publish(device_topic + "config", json.dumps(device_config))
-        client.publish(device_topic + "attributes", json.dumps(device_attributes))
-        client.publish(device_topic + "state", location_name if is_manual_known_locations else PAYLOAD_RESET)
+        send_mqtt_data(force_sync, device)
 
 
 def send_data_devices(force_sync):
     for device in load_data(cache_file_location_devices):
-        device_name = device['name']
-        battery_status = device['batteryStatus']
-        battery_sevel = device['batteryLevel']
-        source_type = get_source_type(device.get('location').get('positionType') if device.get('location') else None)
-
-        location_name = address = latitude = longitude = accuracy = lastUpdate = "unknown"
-        if device['location'] is not None:
-            latitude = device['location']['latitude']
-            longitude = device['location']['longitude']
-            address = device['address']
-            accuracy = math.sqrt(
-                device['location']['horizontalAccuracy'] ** 2 + device['location']['verticalAccuracy'] ** 2)
-            location_name = get_location_name((latitude, longitude))
-            lastUpdate = device['location']['timeStamp']
-
-        device_update = device_updates.get(device_name)
-        if not force_sync and device_update and len(device_update) > 0 and device_update[0] == lastUpdate:
-            continue
-
-        device_updates[device_name] = (lastUpdate, location_name)
-
-        device_id = get_device_id(device_name)
-        device_topic = f"homeassistant/device_tracker/{device_id}/"
-        device_config = {
-            "unique_id": device_id,
-            "state_topic": device_topic + "state",
-            "json_attributes_topic": device_topic + "attributes",
-            "device": {
-                "identifiers": device_id,
-                "manufacturer": "Apple",
-                "name": device_name
-            },
-            "source_type": source_type,
-            "payload_home": "home",
-            "payload_not_home": "not_home"
-        }
-        device_attributes = {
-            "latitude": latitude,
-            "longitude": longitude,
-            "gps_accuracy": accuracy,
-            "address": address,
-            "battery_status": battery_status,
-            "battery_level": battery_sevel,
-            "last_update_timestamp": lastUpdate,
-            "last_update": get_time(lastUpdate),
-            "provider": "FindMy (muehlt/home-assistant-findmy)"
-        }
-
-        client.publish(device_topic + "config", json.dumps(device_config))
-        client.publish(device_topic + "attributes", json.dumps(device_attributes))
-        client.publish(device_topic + "state", location_name)
+        send_mqtt_data(force_sync, device)
 
 
 def scan_cache(privacy, force_sync):
@@ -274,9 +232,10 @@ def validate_param_locations(_, __, path):
 
 
 def set_known_locations(locations):
-    global known_locations
+    global known_locations, is_manual_known_locations
     _path, _known_locations = locations
     known_locations = _known_locations
+    is_manual_known_locations = bool(len(known_locations))
 
 
 @click.command("home-assistant-findmy", no_args_is_help=False)
