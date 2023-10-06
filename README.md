@@ -53,7 +53,7 @@ to read the cache files.
    > All environment variables can also be set using [program arguments](#program-arguments), but it is highly recommended 
    > to use environment variables for your credentials.
 
-### Configure known locations (home/work/gym/...)
+### Configure custom known locations (home/work/gym/...)
 
 Apple's "Safe Locations" are not reliable or versatile enough for your Home Assistant instance.
 You can configure your own known locations in a JSON file which are then used to determine the state published to Home Assistant.
@@ -80,16 +80,27 @@ If the device location is not inside the tolerance of any specified known locati
 If FindMy does not offer a location, the state is 'unknown'.
 The first match will be returned if a device is in the range of multiple known locations.
 
-You need to specify the path of your known locations configuration file as a program argument when running the script.
+To use custom known locations, You need to specify the path of your known locations configuration file as a program argument when running the script.
 
 e.g. `findmy -l /path/to/known_locations.json`
 
+### Using HomeAssistant Locations
+
+In case you want to use HA zones,  don't pass `known_locations`.
+
 ## Run the script
+
+### Locally
 
 1. Ensure that your terminal has [full disk access](https://support.apple.com/de-de/guide/security/secddd1d86a6/web)
 2. Open FindMy in the background and run `findmy -l /path/to/known_locations.json`
 
+### Docker
+1. Ensure that Docker instance (Desktop/Engine) has full disk access through the System's Settings.
+1. Run `docker compose up`.
+
 ## Program Arguments
+(all optionals)
 
 | Argument     | Alias | Description                                                                                         |
 |--------------|-------|-----------------------------------------------------------------------------------------------------|
@@ -104,6 +115,9 @@ e.g. `findmy -l /path/to/known_locations.json`
 > **Warning**: For security reasons, it's advised not to set the password using the `--password` parameter, except in rare test cases. Always prefer setting it via the environment variable.
 
 ## Versions
+
+### 1.0.3
+- Removed the requirement of `known_locations.json`.   In case not passed,  HomeAssistant will use HA Zones to determine the locations. **[@ofirsnb](https://github.com/ofirsnb)**
 
 ### 1.0.X - Breaking changes
 - Configuration is now done solely via environment variables and a JSON file for known locations

@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+    findmy:
+        restart: unless-stopped
+        build: .
+        env_file:
+            - .env
+        environment:
+            - TERM=xterm
+        volumes:
+            - ~/Library/Caches/com.apple.findmy.fmipcore/:/root/Library/Caches/com.apple.findmy.fmipcore/
+        privileged: true
+#        platform: linux/amd64 # enable on Apple Silicon only
