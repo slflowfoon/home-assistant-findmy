@@ -84,7 +84,8 @@ def load_data(data_file):
 
 
 def get_device_id(name):
-    return re.sub('[^0-9a-zA-Z_]+', '', unidecode(re.sub(r'[\s-]', '_', name).lower()))
+    sub = re.sub('[^0-9a-zA-Z_]+', '', unidecode(re.sub(r'[\s-]', '_', name).lower()))
+    return f"findmy_{sub}"
 
 
 def get_source_type(apple_position_type):
@@ -137,7 +138,7 @@ def send_mqtt_data(force_sync, device):
         "device": {
             "identifiers": device_id,
             "manufacturer": "Apple",
-            "name": device_name
+            "name": f"FindMy {device_name}",
         },
         "source_type": source_type,
     }
@@ -155,7 +156,7 @@ def send_mqtt_data(force_sync, device):
         "batteryStatus": battery_status,
         "last_update_timestamp": last_update,
         "last_update": get_time(last_update),
-        "provider": "FindMy (muehlt/home-assistant-findmy)"
+        "provider": "FindMy (ofirsnb/home-assistant-findmy) v1.0.3"
     }
     if battery_level:
         device_attributes["battery_level"] = battery_level
@@ -188,7 +189,7 @@ def scan_cache(privacy, force_sync):
             if not privacy:
                 device_table = Table()
                 device_table.add_column("Device")
-                device_table.add_column("Device ID")
+                device_table.add_column("Device ID", overflow='fold')
                 device_table.add_column("Last Update")
                 device_table.add_column("Location")
                 for device, details in sorted(device_updates.items(), key=lambda x: get_time(x[1][0])):
