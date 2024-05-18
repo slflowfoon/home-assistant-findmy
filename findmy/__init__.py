@@ -8,7 +8,7 @@
 #                                                             -'                  `-'
 # made with ♡ by muehlt
 # github.com/muehlt
-# version 1.0.3
+# version 1.1.0
 #
 # DESCRIPTION:  This python script reads the FindMy cache files and publishes the location
 #               data to MQTT to be used in Home Assistant. It uses auto discovery so no
@@ -171,7 +171,7 @@ def send_mqtt_data(force_sync, device):
         "batteryStatus": battery_status,
         "last_update_timestamp": last_update,
         "last_update": get_time(last_update),
-        "provider": "FindMy (ofirsnb/home-assistant-findmy) v1.0.3"
+        "provider": "FindMy (ofirsnb/home-assistant-findmy) v1.1.0"
     }
     if battery_level:
         device_attributes["battery_level"] = battery_level
