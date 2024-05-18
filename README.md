@@ -119,6 +119,9 @@ In case you want to use HA zones,  don't pass `known_locations`.
 
 ## Versions
 
+### 1.1.1
+- rename mqtt client to more descriptive.  improved `model`.  **[@ofirsnb](https://github.com/ofirsnb)**
+
 ### 1.1.0
 - added `findmy_` prefix to entity id.   added `manufacturer` and `model`.  Additional Minor Improvements.  **[@ofirsnb](https://github.com/ofirsnb)**
 
