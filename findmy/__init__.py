@@ -58,7 +58,7 @@ cache_file_location_devices = cache_file_location + 'Devices.data'
 known_locations = {}
 device_updates = {}
 
-client = mqtt.Client("ha-client")
+client = mqtt.Client("ha-findmy")
 
 def connect_broker():
     client.username_pw_set(mqtt_client_username, mqtt_client_password)
@@ -117,7 +117,10 @@ def getModel(device, manufacturer):
         return model
     if manufacturer == 'Apple':
         return 'AirTag'
-    return None
+    model = device.get('productType',{}).get('productInformation',{}).get('modelName')
+    if model == "":
+        return None
+    return model
 
 def send_mqtt_data(force_sync, device):
     device_name = device['name']
@@ -125,6 +128,7 @@ def send_mqtt_data(force_sync, device):
     battery_level = device.get('batteryLevel')
     source_type = get_source_type(device.get('location').get('positionType') if device.get('location') else None)
     manufacturer = getManufacturer(device)
+    model = getModel(device, manufacturer)
 
     location_name = address = latitude = longitude = accuracy = last_update = "unknown"
     if device['location'] is not None:
@@ -146,13 +150,12 @@ def send_mqtt_data(force_sync, device):
     device_topic = f"homeassistant/device_tracker/{device_id}/"
 
     device_config = {
-        "unique_id": device_id,
+        "unique_id": f"{device_id} {device_name}",
         "state_topic": device_topic + "state",
         "json_attributes_topic": device_topic + "attributes",
         "device": {
             "identifiers": device_id,
             "manufacturer": manufacturer,
-            "model": getModel(device, manufacturer),
             "name": f"FindMy {device_name}",
         },
         "source_type": source_type,
@@ -175,6 +178,8 @@ def send_mqtt_data(force_sync, device):
     }
     if battery_level:
         device_attributes["battery_level"] = battery_level
+    if model:
+        device_config["device"]["model"] = model
 
     client.publish(device_topic + "config", json.dumps(device_config))
     client.publish(device_topic + "attributes", json.dumps(device_attributes))
