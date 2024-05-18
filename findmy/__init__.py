@@ -105,12 +105,26 @@ def get_location_name(pos):
             return name
     return "not_home"
 
+def getManufacturer(device):
+    manufacturer = device.get('productType',{}).get('productInformation',{}).get('manufacturerName')
+    if manufacturer is not None:
+        return manufacturer
+    return "Apple"
+
+def getModel(device, manufacturer):
+    model = device.get("deviceDisplayName")
+    if model is not None:
+        return model
+    if manufacturer == 'Apple':
+        return 'AirTag'
+    return None
 
 def send_mqtt_data(force_sync, device):
     device_name = device['name']
     battery_status = device['batteryStatus']
     battery_level = device.get('batteryLevel')
     source_type = get_source_type(device.get('location').get('positionType') if device.get('location') else None)
+    manufacturer = getManufacturer(device)
 
     location_name = address = latitude = longitude = accuracy = last_update = "unknown"
     if device['location'] is not None:
@@ -137,7 +151,8 @@ def send_mqtt_data(force_sync, device):
         "json_attributes_topic": device_topic + "attributes",
         "device": {
             "identifiers": device_id,
-            "manufacturer": "Apple",
+            "manufacturer": manufacturer,
+            "model": getModel(device, manufacturer),
             "name": f"FindMy {device_name}",
         },
         "source_type": source_type,
