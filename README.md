@@ -1,6 +1,9 @@
 # home-assistant-findmy
 A python script that reads local FindMy cache files to publish device locations and metadata (including those of AirTags, AirPods, Apple Watches, iPhones) to Home Assistant via MQTT.
 
+> [!IMPORTANT]
+> It doesn't work on macOS versions Sonoma 14.4 / Ventura 13.6.5 / Monterey 12.7.5 and above due to encryption by Apple per CVE-2024-23229.
+
 [Migration to v1.0.2](https://github.com/muehlt/home-assistant-findmy/tree/main/.github/MIGRATION_GUIDE/1.0.2.md) • 
 [Support this project](https://buymeacoffee.com/muehlt)
 
@@ -92,7 +95,7 @@ In case you want to use HA zones,  don't pass `known_locations`.
 
 ### Locally
 
-1. Ensure that your terminal has [full disk access](https://support.apple.com/de-de/guide/security/secddd1d86a6/web)
+1. Ensure that your terminal has [full disk access](https://support.apple.com/en-us/guide/security/secddd1d86a6/web)
 2. Open FindMy in the background and run `findmy -l /path/to/known_locations.json`
 
 ### Docker
