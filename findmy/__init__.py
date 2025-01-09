@@ -174,7 +174,7 @@ def send_mqtt_data(force_sync, device):
         "batteryStatus": battery_status,
         "last_update_timestamp": last_update,
         "last_update": get_time(last_update),
-        "provider": "FindMy (ofirsnb/home-assistant-findmy) v1.1.1"
+        "provider": "FindMy (slflowfoon/home-assistant-findmy) v1.1.1"
     }
     if battery_level:
         device_attributes["battery_level"] = battery_level
