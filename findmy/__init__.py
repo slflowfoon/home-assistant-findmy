@@ -181,9 +181,9 @@ def send_mqtt_data(force_sync, device):
     if model:
         device_config["device"]["model"] = model
 
-    client.publish(device_topic + "config", json.dumps(device_config))
-    client.publish(device_topic + "attributes", json.dumps(device_attributes))
-    client.publish(device_topic + "state", location_name if is_manual_known_locations else PAYLOAD_RESET)
+    client.publish(device_topic + "config", json.dumps(device_config), retain=True)
+    client.publish(device_topic + "attributes", json.dumps(device_attributes), retain=True)
+    client.publish(device_topic + "state", location_name if is_manual_known_locations else PAYLOAD_RESET, retain=True)
 
 
 def send_data_items(force_sync):
