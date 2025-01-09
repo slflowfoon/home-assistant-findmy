@@ -32,90 +32,10 @@ to read the cache files.
 
 ## How to use
 
-[Migration to v1.0.2](https://github.com/muehlt/home-assistant-findmy/tree/main/.github/MIGRATION_GUIDE/1.0.2.md)
-
-### Basic installation
-
-1. Install using pip: `pip3 install home-assistant-findmy`
-2. Setup environment variables:
-    - `export MQTT_CLIENT_USERNAME=your_username`
-    - `export MQTT_CLIENT_PASSWORD=your_password`
-    - `export MQTT_BROKER_IP=your_broker_ip`
-    - `export MQTT_BROKER_PORT=your_broker_port` (defaults to `1883`, if not set)
-    - `export FINDMY_FILE_SCAN_INTERVAL=your_scan_interval` (defaults to `5` seconds, if not set)
-
-   > You can also create a `.env` file in the directory you run the script from and add the environment variables there, e.g.:
-   > ```
-   > MQTT_CLIENT_USERNAME        = mqtt_client
-   > MQTT_CLIENT_PASSWORD        = your_password
-   > MQTT_BROKER_IP              = 192.168.178.5
-   > MQTT_BROKER_PORT            = 1883
-   > FINDMY_FILE_SCAN_INTERVAL   = 5
-   > ```
-   
-   > All environment variables can also be set using [program arguments](#program-arguments), but it is highly recommended 
-   > to use environment variables for your credentials.
-
-### Configure custom known locations (home/work/gym/...)
-
-Apple's "Safe Locations" are not reliable or versatile enough for your Home Assistant instance.
-You can configure your own known locations in a JSON file which are then used to determine the state published to Home Assistant.
-For each location you need to specify a name, latitude, longitude and a tolerance in meters (see example configuration).
-
-
-*Example configuration:*
-```json
-{
-    "home": {
-        "latitude": 12.3456789,
-        "longitude": 12.3456789,
-        "tolerance": 70
-    },
-    "work": {
-        "latitude": 12.3456789,
-        "longitude": 12.3456789,
-        "tolerance": 70
-    }
-}
-```
-
-If the device location is not inside the tolerance of any specified known location, 'not_home' will be shown.
-If FindMy does not offer a location, the state is 'unknown'.
-The first match will be returned if a device is in the range of multiple known locations.
-
-To use custom known locations, You need to specify the path of your known locations configuration file as a program argument when running the script.
-
-e.g. `findmy -l /path/to/known_locations.json`
-
-### Using HomeAssistant Locations
-
-In case you want to use HA zones,  don't pass `known_locations`.
-
-## Run the script
-
-### Locally
-
-1. Ensure that your terminal has [full disk access](https://support.apple.com/en-us/guide/security/secddd1d86a6/web)
-2. Open FindMy in the background and run `findmy -l /path/to/known_locations.json`
-
 ### Docker
 1. Ensure that Docker instance (Desktop/Engine) has full disk access through the System's Settings.
-1. Run `docker compose up`.
-
-## Program Arguments
-(all optionals)
-
-| Argument     | Alias | Description                                                                                         |
-|--------------|-------|-----------------------------------------------------------------------------------------------------|
-| `--locations` | `-l`  | Path to the known locations JSON configuration file.                                                |
-| `--privacy`  | `-p`  | Hides specific device data from the console output.                                                 |
-| `--force-sync` | `-f`  | Disables the timestamp check and provides an update every `FINDMY_FILE_SCAN_INTERVAL` seconds.      |
-| `--ip`       |       | IP of the MQTT broker.                                                                              |
-| `--port`     |       | Port of the MQTT broker.                                                                            |
-| `--username` |       | MQTT client username.                                                                               |
-| `--password` [**Warning**] |       | MQTT client password. **Only for rare test cases!** Avoid setting the password using this parameter. |
-
-> **Warning**: For security reasons, it's advised not to set the password using the `--password` parameter, except in rare test cases. Always prefer setting it via the environment variable.
+2. Configure .env
+3. Run `docker compose up`.
 
 ## Versions
 
