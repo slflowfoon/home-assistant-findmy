@@ -130,7 +130,7 @@ def send_mqtt_data(force_sync, device):
     manufacturer = getManufacturer(device)
     model = getModel(device, manufacturer)
 
-    location_name = address = latitude = longitude = accuracy = last_update = "unknown"
+    location_name = address = latitude = longitude = accuracy = last_update = None
     if device['location'] is not None:
         latitude = device['location']['latitude']
         longitude = device['location']['longitude']
